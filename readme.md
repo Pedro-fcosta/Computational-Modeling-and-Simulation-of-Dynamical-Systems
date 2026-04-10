@@ -1,12 +1,9 @@
-````markdown
-# Computational Modeling and Simulation of Dynamical Systems  
-# Modelagem Computacional e Simulação de Sistemas Dinâmicos
+# Computational Modeling and Simulation of Dynamical Systems
 
-<p align="center">
-  Undergraduate research repository focused on computational dynamics, numerical simulation, and visualization of dynamical systems using Python.  
-  <br>
-  Repositório de iniciação científica voltado para dinâmica computacional, simulação numérica e visualização de sistemas dinâmicos utilizando Python.
-</p>
+**Modelagem Computacional e Simulação de Sistemas Dinâmicos**
+
+Undergraduate research repository focused on computational dynamics, numerical simulation, and visualization of dynamical systems using Python.  
+Repositório de iniciação científica voltado para dinâmica computacional, simulação numérica e visualização de sistemas dinâmicos utilizando Python.
 
 ---
 
