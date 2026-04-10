@@ -95,7 +95,7 @@ This structure makes the repository easier to organize, document, and expand as 
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/your-username/your-repository.git
+git clone https://github.com/Pedro-fcosta/Computational-Modeling-and-Simulation-of-Dynamical-Systems
 ```
 
 2. Access the project folder:
@@ -231,7 +231,7 @@ Essa estrutura facilita a organização, a documentação e a expansão do repos
 1. Clone este repositório:
 
 ```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
+git clone https://github.com/Pedro-fcosta/Computational-Modeling-and-Simulation-of-Dynamical-Systems
 ```
 
 2. Acesse a pasta do repositório:
