@@ -30,7 +30,7 @@
 
 import math
 
-def f(x, y):
+def f_pvi(x, y):
     return 1 / (y**2) + x * math.log(y, math.e)
 
 def erro_relativo(Yi_k, Yi_k_menos_1):
@@ -40,7 +40,7 @@ def erro_relativo(Yi_k, Yi_k_menos_1):
 Y4_0 = 1.4116 + (0.2/24) * (55*1.0534 - 59*0.9500 + 37*0.9830 - 9*1.3394)
 print("Y4(0) =", Y4_0)
 
-f_X4_Y4_0 = f(1.8, Y4_0)
+f_X4_Y4_0 = f_pvi(1.8, Y4_0)
 print("f(X4, Y4(0)) =", f_X4_Y4_0)
 print()
 
@@ -56,7 +56,7 @@ print("Erro relativo k = 1:", erro_relativo_k1)
 # continua pois erro_relativo_k1 > 0.5 * 10 **(-2)
 print()
 
-f_X4_Y4_1 = f(1.8, Y4_1)
+f_X4_Y4_1 = f_pvi(1.8, Y4_1)
 print("f(X4, Y4(1)) =", f_X4_Y4_1)
 print()
 
@@ -68,27 +68,113 @@ erro_relativo_k2 = erro_relativo(Y4_2, Y4_1)
 print("Erro relativo k = 2:", erro_relativo_k2)
 # para k = 2, o erro relativo é menor que 0.5 * 10 **(-2), então o método implícito pode ser interrompido
 
-f_X4_Y4_2 = f(1.8, Y4_2)
+f_X4_Y4_2 = f_pvi(1.8, Y4_2)
 print("f(X4, Y4(2)) =", f_X4_Y4_2)
 print()
 
 # 3 passo: Calcular Y5(0) usando método explícito
 
-Y5_0 = Y4_2 + (0.2/24) * (55*f_X4_Y4_2 - 59*f(1.6, 1.4116) + 37*f(1.4, 1.2131) - 9*f(1.2, 1.0227))
+Y5_0 = Y4_2 + (0.2/24) * (55*f_X4_Y4_2 - 59*f_pvi(1.6, 1.4116) + 37*f_pvi(1.4, 1.2131) - 9*f_pvi(1.2, 1.0227))
 print("Y5(0) =", Y5_0)
 
-f_X5_Y5_0 = f(2.0, Y5_0)
+f_X5_Y5_0 = f_pvi(2.0, Y5_0)
 print("f(X5, Y5(0)) =", f_X5_Y5_0)
 print()
 
 # 1 iteração: calcular Y5(1) usando método implícito
-Y5_1 = Y4_2 + (0.2/24) * (9*f_X5_Y5_0 + 19*f_X4_Y4_2 - 5*f(1.6, 1.4116) + f(1.4, 1.2131))
+Y5_1 = Y4_2 + (0.2/24) * (9*f_X5_Y5_0 + 19*f_X4_Y4_2 - 5*f_pvi(1.6, 1.4116) + f_pvi(1.4, 1.2131))
 print("Y5(1) =", Y5_1)
 erro_relativo_k1_Y5 = erro_relativo(Y5_1, Y5_0)
 print("Erro relativo k = 1 para Y5:", erro_relativo_k1_Y5)
 # para k = 1, o erro relativo é menor que 0.5 * 10 **(-2), então o método implícito pode ser interrompido
-f_X5_Y5_1 = f(2.0, Y5_1)
+f_X5_Y5_1 = f_pvi(2.0, Y5_1)
 print("f(X5, Y5(1)) =", f_X5_Y5_1)
 
 # y5(1) é a aproximação de Y(2) usando o método de Adams Moulton (Preditor Corretor) com h = 0.2
 print("Aproximação de Y(2) usando Adams Moulton (Preditor Corretor) =", Y5_1)
+
+
+# ___________________________________________________________________________________________________________________________________
+# Exemple of a Simple Harmonic Oscillator with Adams Moulton method (Preditor Corretor):
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# SHO parameters
+m = 1.0
+k = 4.0
+dt = 0.01
+t_max = 10.0
+
+# SHO system
+def f_sho(t, y, k, m):
+    x, v = y
+    dxdt = v
+    dvdt = -(k/m) * x
+    return np.array([dxdt, dvdt])
+
+# One RK4 step to generate the first points
+def rk4_step(f, t, y, dt, k, m):
+    k1 = f(t, y, k, m)
+    k2 = f(t + dt/2, y + dt*k1/2, k, m)
+    k3 = f(t + dt/2, y + dt*k2/2, k, m)
+    k4 = f(t + dt, y + dt*k3, k, m)
+    return y + (dt/6) * (k1 + 2*k2 + 2*k3 + k4)
+
+# Initial conditions
+t = [0.0]
+y = [np.array([1.0, 0.0])]   # [x0, v0]
+
+# Generate y1, y2, y3 using RK4
+for _ in range(3):
+    y_next = rk4_step(f_sho, t[-1], y[-1], dt, k, m)
+    t.append(t[-1] + dt)
+    y.append(y_next)
+
+# Predictor-Corrector loop
+while t[-1] < t_max:
+    n = len(y) - 1
+
+    f_n  = f_sho(t[n],   y[n],   k, m)
+    f_n1 = f_sho(t[n-1], y[n-1], k, m)
+    f_n2 = f_sho(t[n-2], y[n-2], k, m)
+    f_n3 = f_sho(t[n-3], y[n-3], k, m)
+
+    # Predictor: Adams-Bashforth 4
+    y_pred = y[n] + (dt/24) * (55*f_n - 59*f_n1 + 37*f_n2 - 9*f_n3)
+
+    t_next = t[n] + dt
+
+    # Corrector: Adams-Moulton 4
+    f_pred = f_sho(t_next, y_pred, k, m)
+    y_corr = y[n] + (dt/24) * (9*f_pred + 19*f_n - 5*f_n1 + f_n2)
+
+    t.append(t_next)
+    y.append(y_corr)
+
+# Convert to arrays
+t = np.array(t)
+y = np.array(y)
+
+x = y[:, 0]
+v = y[:, 1]
+
+# Plots
+plt.figure(figsize=(12, 6))
+
+plt.subplot(2, 1, 1)
+plt.plot(t, x, label="Position")
+plt.xlabel("Time")
+plt.ylabel("Position")
+plt.legend()
+plt.grid()
+
+plt.subplot(2, 1, 2)
+plt.plot(t, v, label="Velocity")
+plt.xlabel("Time")
+plt.ylabel("Velocity")
+plt.legend()
+plt.grid()
+
+plt.tight_layout()
+plt.show()
