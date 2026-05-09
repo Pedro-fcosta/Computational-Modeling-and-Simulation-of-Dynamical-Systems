@@ -1,180 +1,233 @@
-# Adams Moulton method (Preditor Corretor):
+# Adams-Bashforth / Adams-Moulton 4th Order Predictor-Corrector Method
 
-# Método explícito de ordem 4:
-# Yi+1(0) = Yi + (h/24) * [(55*f(Xi, Yi) - 59*f(Xi-1, Yi-1) + 37*f(Xi-2, Yi-2) - 9*f(Xi-3, Yi-3))] i >= 3 
-
-# Método implícito de ordem 4:
-# Yi+1(1) = Yi + (h/24) * [9*f(Xi+1, Yi+1(0)) + 19*f(Xi, Yi) - 5*f(Xi-1, Yi-1) + f(Xi-2, Yi-2)]
-
-# Critério de parada do método Implícito:
-# (|Yi+1(k) - Yi+1(k-1)|) / (|Yi+1(1)|) < e   k = 1,2, 3, ...
+# ============================================================
+# PART 1 - Initial Value Problem (IVP)
+# ============================================================
 
 # Initial Value Problem (IVP)
-# Differential equation in differential form:
-# Y' = [1 / (Y**2)] + x * ln(Y)
+# Differential equation:
+# y' = 1 / (y^2) + x * ln(y)
 #
 # Initial condition:
-# Y(1) = 0,8
-
-# Aproxime Y(2) usando h = 0,2
-# Sabe-se que, pelo MRK4:
-# X0 = 1 , Y0 = 0,8 => f(X0, Y0) = 1,3394
-# X1 = 1,2 , Y1 = 1,0227 => f(X1, Y1) = 0,9830
-# X2 = 1,4 , Y2 = 1,2131 => f(X2, Y2) = 0,9500
-# X3 = 1,6 , Y3 = 1,4116 => f(X3, Y3) = 1,0534
-
-# Adote e = 0,5 * 10 **(-2) e erro relativo como critério de parada
-
-# 1 passo: Calcular Y(0)4 usando método explícito
-# Y4(0) = Y3 + (h/24) * (55*f(X3, Y3) - 59*f(X2, Y2) + 37*f(X1, Y1) - 9*f(X0, Y0))
+# y(1) = 0.8
+#
+# Step size:
+# h = 0.2
+#
+# Objective:
+# Approximate y(2.0) using the Predictor-Corrector method
+#
+# Known starting values obtained previously with RK4:
+# x0 = 1.0, y0 = 0.8
+# x1 = 1.2, y1 = 1.0227
+# x2 = 1.4, y2 = 1.2131
+# x3 = 1.6, y3 = 1.4116
+#
+# Tolerance:
+# eps = 0.5 * 10^(-2)
 
 import math
-
-def f_pvi(x, y):
-    return 1 / (y**2) + x * math.log(y, math.e)
-
-def erro_relativo(Yi_k, Yi_k_menos_1):
-    return abs(Yi_k - Yi_k_menos_1) / abs(Yi_k)
-
-
-Y4_0 = 1.4116 + (0.2/24) * (55*1.0534 - 59*0.9500 + 37*0.9830 - 9*1.3394)
-print("Y4(0) =", Y4_0)
-
-f_X4_Y4_0 = f_pvi(1.8, Y4_0)
-print("f(X4, Y4(0)) =", f_X4_Y4_0)
-print()
-
-
-# 2 passo: Calcular Y(0)4 usando método implícito
-
-# 1 iteração: k = 1
-# Y4(1) = Y3 + (h/24) * (9*f(X4, Y4(0)) + 19*f(X3, Y3) - 5*f(X2, Y2) + f(X1, Y1))
-Y4_1 = 1.4116 + (0.2/24) * (9*f_X4_Y4_0 + 19*1.0534 - 5*0.9500 + 0.9830)
-print("Y4(1) =", Y4_1)
-erro_relativo_k1 = erro_relativo(Y4_1, Y4_0)
-print("Erro relativo k = 1:", erro_relativo_k1)
-# continua pois erro_relativo_k1 > 0.5 * 10 **(-2)
-print()
-
-f_X4_Y4_1 = f_pvi(1.8, Y4_1)
-print("f(X4, Y4(1)) =", f_X4_Y4_1)
-print()
-
-# 2 iteração: k = 2
-# Y4(2) = Y3 + (h/24) * (9*f(X4, Y4(1)) + 19*f(X3, Y3) - 5*f(X2, Y2) + f(X1, Y1))
-Y4_2 = 1.4116 + (0.2/24) * (9*f_X4_Y4_1 + 19*1.0534 - 5*0.9500 + 0.9830)
-print("Y4(2) =", Y4_2)
-erro_relativo_k2 = erro_relativo(Y4_2, Y4_1)
-print("Erro relativo k = 2:", erro_relativo_k2)
-# para k = 2, o erro relativo é menor que 0.5 * 10 **(-2), então o método implícito pode ser interrompido
-
-f_X4_Y4_2 = f_pvi(1.8, Y4_2)
-print("f(X4, Y4(2)) =", f_X4_Y4_2)
-print()
-
-# 3 passo: Calcular Y5(0) usando método explícito
-
-Y5_0 = Y4_2 + (0.2/24) * (55*f_X4_Y4_2 - 59*f_pvi(1.6, 1.4116) + 37*f_pvi(1.4, 1.2131) - 9*f_pvi(1.2, 1.0227))
-print("Y5(0) =", Y5_0)
-
-f_X5_Y5_0 = f_pvi(2.0, Y5_0)
-print("f(X5, Y5(0)) =", f_X5_Y5_0)
-print()
-
-# 1 iteração: calcular Y5(1) usando método implícito
-Y5_1 = Y4_2 + (0.2/24) * (9*f_X5_Y5_0 + 19*f_X4_Y4_2 - 5*f_pvi(1.6, 1.4116) + f_pvi(1.4, 1.2131))
-print("Y5(1) =", Y5_1)
-erro_relativo_k1_Y5 = erro_relativo(Y5_1, Y5_0)
-print("Erro relativo k = 1 para Y5:", erro_relativo_k1_Y5)
-# para k = 1, o erro relativo é menor que 0.5 * 10 **(-2), então o método implícito pode ser interrompido
-f_X5_Y5_1 = f_pvi(2.0, Y5_1)
-print("f(X5, Y5(1)) =", f_X5_Y5_1)
-
-# y5(1) é a aproximação de Y(2) usando o método de Adams Moulton (Preditor Corretor) com h = 0.2
-print("Aproximação de Y(2) usando Adams Moulton (Preditor Corretor) =", Y5_1)
-
-
-# ___________________________________________________________________________________________________________________________________
-# Exemple of a Simple Harmonic Oscillator with Adams Moulton method (Preditor Corretor):
-
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+def f_ivp(x, y):
+    return 1 / (y**2) + x * math.log(y)
+
+
+def relative_error(new_value, old_value):
+    return abs(new_value - old_value) / abs(new_value)
+
+
+# Initial known points
+h = 0.2
+eps = 0.5 * 10**(-2)
+
+x_values_ivp = [1.0, 1.2, 1.4, 1.6]
+y_values_ivp = [0.8, 1.0227, 1.2131, 1.4116]
+
+x_final_ivp = 2.0
+
+while x_values_ivp[-1] < x_final_ivp:
+    n = len(y_values_ivp) - 1
+    x_next = x_values_ivp[n] + h
+
+    # Predictor: Adams-Bashforth 4
+    y_pred = y_values_ivp[n] + (h / 24) * (
+        55 * f_ivp(x_values_ivp[n],     y_values_ivp[n])
+        - 59 * f_ivp(x_values_ivp[n-1], y_values_ivp[n-1])
+        + 37 * f_ivp(x_values_ivp[n-2], y_values_ivp[n-2])
+        - 9  * f_ivp(x_values_ivp[n-3], y_values_ivp[n-3])
+    )
+
+    # Corrector: Adams-Moulton 4
+    y_old = y_pred
+
+    while True:
+        y_corr = y_values_ivp[n] + (h / 24) * (
+            9  * f_ivp(x_next, y_old)
+            + 19 * f_ivp(x_values_ivp[n],     y_values_ivp[n])
+            - 5  * f_ivp(x_values_ivp[n-1],   y_values_ivp[n-1])
+            +     f_ivp(x_values_ivp[n-2],    y_values_ivp[n-2])
+        )
+
+        if relative_error(y_corr, y_old) < eps:
+            break
+
+        y_old = y_corr
+
+    x_values_ivp.append(x_next)
+    y_values_ivp.append(y_corr)
+
+print("IVP solved with Predictor-Corrector:")
+for xi, yi in zip(x_values_ivp, y_values_ivp):
+    print(f"x = {xi:.1f}, y = {yi:.6f}")
+
+print("\nApproximation of y(2.0):", f"{y_values_ivp[-1]:.6f}")
+print()
+
+
+# ============================================================
+# PART 2 - Simple Harmonic Oscillator (SHO)
+# ============================================================
+
+# Simple Harmonic Oscillator:
+# m*x'' + k*x = 0
+#
+# Equivalent first-order system:
+# x' = v
+# v' = -(k/m) * x
+#
+# Initial conditions:
+# x(0) = 1
+# v(0) = 0
+#
+# Parameters:
+# m = 1
+# k = 4
+#
+# Analytical solution:
+# x(t) = cos(2t)
+# v(t) = -2*sin(2t)
+
 
 # SHO parameters
 m = 1.0
 k = 4.0
 dt = 0.01
-t_max = 10.0
+t_max = 20.0
 
-# SHO system
-def f_sho(t, y, k, m):
+
+def sho_system(t, y):
     x, v = y
     dxdt = v
-    dvdt = -(k/m) * x
+    dvdt = -(k / m) * x
     return np.array([dxdt, dvdt])
 
-# One RK4 step to generate the first points
-def rk4_step(f, t, y, dt, k, m):
-    k1 = f(t, y, k, m)
-    k2 = f(t + dt/2, y + dt*k1/2, k, m)
-    k3 = f(t + dt/2, y + dt*k2/2, k, m)
-    k4 = f(t + dt, y + dt*k3, k, m)
-    return y + (dt/6) * (k1 + 2*k2 + 2*k3 + k4)
+
+def rk4_step(f, t, y, dt):
+    k1 = f(t, y)
+    k2 = f(t + dt / 2, y + dt * k1 / 2)
+    k3 = f(t + dt / 2, y + dt * k2 / 2)
+    k4 = f(t + dt, y + dt * k3)
+    return y + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
+
+
+def x_analytical(t):
+    return np.cos(2 * t)
+
+
+def v_analytical(t):
+    return -2 * np.sin(2 * t)
+
 
 # Initial conditions
-t = [0.0]
-y = [np.array([1.0, 0.0])]   # [x0, v0]
+t_values = [0.0]
+Y_values = [np.array([1.0, 0.0])]   # [x0, v0]
 
-# Generate y1, y2, y3 using RK4
+# Generate the first 3 additional points using RK4
 for _ in range(3):
-    y_next = rk4_step(f_sho, t[-1], y[-1], dt, k, m)
-    t.append(t[-1] + dt)
-    y.append(y_next)
+    y_next = rk4_step(sho_system, t_values[-1], Y_values[-1], dt)
+    t_values.append(t_values[-1] + dt)
+    Y_values.append(y_next)
 
 # Predictor-Corrector loop
-while t[-1] < t_max:
-    n = len(y) - 1
+while t_values[-1] < t_max:
+    n = len(Y_values) - 1
+    t_next = t_values[n] + dt
 
-    f_n  = f_sho(t[n],   y[n],   k, m)
-    f_n1 = f_sho(t[n-1], y[n-1], k, m)
-    f_n2 = f_sho(t[n-2], y[n-2], k, m)
-    f_n3 = f_sho(t[n-3], y[n-3], k, m)
+    f_n  = sho_system(t_values[n],   Y_values[n])
+    f_n1 = sho_system(t_values[n-1], Y_values[n-1])
+    f_n2 = sho_system(t_values[n-2], Y_values[n-2])
+    f_n3 = sho_system(t_values[n-3], Y_values[n-3])
 
     # Predictor: Adams-Bashforth 4
-    y_pred = y[n] + (dt/24) * (55*f_n - 59*f_n1 + 37*f_n2 - 9*f_n3)
-
-    t_next = t[n] + dt
+    y_pred = Y_values[n] + (dt / 24) * (
+        55 * f_n - 59 * f_n1 + 37 * f_n2 - 9 * f_n3
+    )
 
     # Corrector: Adams-Moulton 4
-    f_pred = f_sho(t_next, y_pred, k, m)
-    y_corr = y[n] + (dt/24) * (9*f_pred + 19*f_n - 5*f_n1 + f_n2)
+    f_pred = sho_system(t_next, y_pred)
+    y_corr = Y_values[n] + (dt / 24) * (
+        9 * f_pred + 19 * f_n - 5 * f_n1 + f_n2
+    )
 
-    t.append(t_next)
-    y.append(y_corr)
+    t_values.append(t_next)
+    Y_values.append(y_corr)
 
 # Convert to arrays
-t = np.array(t)
-y = np.array(y)
+t_values = np.array(t_values)
+Y_values = np.array(Y_values)
 
-x = y[:, 0]
-v = y[:, 1]
+# Numerical solution
+x_numerical = Y_values[:, 0]
+v_numerical = Y_values[:, 1]
 
-# Plots
-plt.figure(figsize=(12, 6))
+# Analytical solution
+x_exact = x_analytical(t_values)
+v_exact = v_analytical(t_values)
 
-plt.subplot(2, 1, 1)
-plt.plot(t, x, label="Position")
+# Absolute errors
+x_absolute_error = np.abs(x_numerical - x_exact)
+v_absolute_error = np.abs(v_numerical - v_exact)
+
+# ============================================================
+# PLOTS
+# ============================================================
+
+# Position comparison
+plt.figure(figsize=(10, 5))
+plt.plot(t_values, x_numerical, label="Predictor-Corrector Numerical Solution")
+plt.plot(t_values, x_exact, "--", label="Analytical Solution")
 plt.xlabel("Time")
 plt.ylabel("Position")
+plt.title("Simple Harmonic Oscillator - Position Comparison")
 plt.legend()
 plt.grid()
+plt.show()
 
-plt.subplot(2, 1, 2)
-plt.plot(t, v, label="Velocity")
+# Velocity comparison
+plt.figure(figsize=(10, 5))
+plt.plot(t_values, v_numerical, label="Predictor-Corrector Numerical Solution")
+plt.plot(t_values, v_exact, "--", label="Analytical Solution")
 plt.xlabel("Time")
 plt.ylabel("Velocity")
+plt.title("Simple Harmonic Oscillator - Velocity Comparison")
 plt.legend()
 plt.grid()
-
-plt.tight_layout()
 plt.show()
+
+# Absolute error plot
+plt.figure(figsize=(10, 5))
+plt.plot(t_values, x_absolute_error, label="Position Absolute Error")
+plt.plot(t_values, v_absolute_error, label="Velocity Absolute Error")
+plt.xlabel("Time")
+plt.ylabel("Absolute Error")
+plt.title("Absolute Error Relative to the Analytical Solution")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Final error values
+print("Final absolute error in position:", x_absolute_error[-1])
+print("Final absolute error in velocity:", v_absolute_error[-1])
