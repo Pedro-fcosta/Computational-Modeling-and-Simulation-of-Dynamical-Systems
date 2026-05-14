@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 
 
 def f_ivp(x, y):
-    return 1 / (y**2) + x * math.log(y)
+    return 1 / (y**2) + x * math.log(y, math.e)
 
 
 def relative_error(new_value, old_value):
