@@ -26,8 +26,13 @@ import matplotlib.pyplot as plt
 
 m = 1.0
 k = 4.0
-dt = 0.1
+dt = 0.01
 t_max = 20.0
+
+omega = np.sqrt(k / m)
+
+position_amplitude = 1.0
+velocity_amplitude = omega * position_amplitude
 
 omega = np.sqrt(k / m)
 n_steps = int(t_max / dt)
@@ -176,9 +181,8 @@ def solve_predictor_corrector():
 # ============================================================
 # ERROR FUNCTIONS
 # ============================================================
-def relative_error(numerical, exact):
-    denominator = np.maximum(np.abs(exact), 1e-12)
-    return np.abs(numerical - exact) / denominator
+def amplitude_normalized_error(numerical, exact, amplitude):
+    return np.abs(numerical - exact) / amplitude
 
 # ============================================================
 # PLOT FUNCTION - 4 GRAPHS IN ONE SCREEN
@@ -187,8 +191,8 @@ def plot_method_dashboard(method_name, t_values, x_num, v_num):
     x_exact = x_analytical(t_values)
     v_exact = v_analytical(t_values)
 
-    x_rel_error = relative_error(x_num, x_exact)
-    v_rel_error = relative_error(v_num, v_exact)
+    x_rel_error = amplitude_normalized_error(x_num, x_exact, position_amplitude)
+    v_rel_error = amplitude_normalized_error(v_num, v_exact, velocity_amplitude)
 
     fig, axes = plt.subplots(2, 2, figsize=(14, 8))
     fig.suptitle(f"{method_name} - SHO Dashboard", fontsize=14)
@@ -215,14 +219,14 @@ def plot_method_dashboard(method_name, t_values, x_num, v_num):
     axes[1, 0].plot(t_values, x_rel_error)
     axes[1, 0].set_title("Relative Error - Position")
     axes[1, 0].set_xlabel("Time")
-    axes[1, 0].set_ylabel("Relative Error")
+    axes[1, 0].set_ylabel("Amplitude-Normalized Error")
     axes[1, 0].grid()
 
     # Relative Error in Velocity
     axes[1, 1].plot(t_values, v_rel_error)
     axes[1, 1].set_title("Relative Error - Velocity")
     axes[1, 1].set_xlabel("Time")
-    axes[1, 1].set_ylabel("Relative Error")
+    axes[1, 1].set_ylabel("Amplitude-Normalized Error")
     axes[1, 1].grid()
 
     plt.tight_layout()
@@ -262,17 +266,20 @@ x_exact_pc = x_analytical(t_pc)
 v_exact_pc = v_analytical(t_pc)
 
 # Relative errors
-x_error_er = relative_error(x_er, x_exact_er)
-v_error_er = relative_error(v_er, v_exact_er)
+position_amplitude = 1.0
+velocity_amplitude = omega * position_amplitude
 
-x_error_rk4 = relative_error(x_rk4, x_exact_rk4)
-v_error_rk4 = relative_error(v_rk4, v_exact_rk4)
+x_error_er = amplitude_normalized_error(x_er, x_exact_er, position_amplitude)
+v_error_er = amplitude_normalized_error(v_er, v_exact_er, velocity_amplitude)
 
-x_error_vv = relative_error(x_vv, x_exact_vv)
-v_error_vv = relative_error(v_vv, v_exact_vv)
+x_error_rk4 = amplitude_normalized_error(x_rk4, x_exact_rk4, position_amplitude)
+v_error_rk4 = amplitude_normalized_error(v_rk4, v_exact_rk4, velocity_amplitude)
 
-x_error_pc = relative_error(x_pc, x_exact_pc)
-v_error_pc = relative_error(v_pc, v_exact_pc)
+x_error_vv = amplitude_normalized_error(x_vv, x_exact_vv, position_amplitude)
+v_error_vv = amplitude_normalized_error(v_vv, v_exact_vv, velocity_amplitude)
+
+x_error_pc = amplitude_normalized_error(x_pc, x_exact_pc, position_amplitude)
+v_error_pc = amplitude_normalized_error(v_pc, v_exact_pc, velocity_amplitude)
 
 # ------------------------------------------------------------
 # 1. Position vs Time - All methods
@@ -333,4 +340,26 @@ plt.ylabel("Absolute Error")
 plt.title("Mean and Max Absolute Error in Position")
 plt.legend()
 plt.grid(axis="y")
+plt.show()
+
+
+# ------------------------------------------------------------
+# Phase Space Plot - All Methods
+# ------------------------------------------------------------
+plt.figure(figsize=(10, 8))
+
+plt.plot(x_er, v_er, label="Euler-Richardson")
+plt.plot(x_rk4, v_rk4, label="RK4")
+plt.plot(x_vv, v_vv, label="Velocity Verlet")
+plt.plot(x_pc, v_pc, label="Predictor-Corrector")
+
+# Analytical phase space
+plt.plot(x_exact_rk4, v_exact_rk4, "--", label="Analytical Solution")
+
+plt.xlabel("Position")
+plt.ylabel("Velocity")
+plt.title("SHO - Phase Space: Position vs Velocity")
+plt.legend()
+plt.grid()
+plt.axis("equal")
 plt.show()
